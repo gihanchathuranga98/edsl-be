@@ -6,6 +6,7 @@ import { UserModule } from './user/user.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { StationModule } from './station/station.module';
 import { FundModule } from './fund/fund.module';
+import { TcrModule } from './tcr/tcr.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { FundModule } from './fund/fund.module';
     UserModule,
     StationModule,
     FundModule,
+    TcrModule,
   ],
   controllers: [AppController],
   providers: [AppService],

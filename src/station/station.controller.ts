@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -35,5 +36,11 @@ export class StationController {
   @RequirePermission(Permission.DELETE_USER)
   async removeStation(@Param('id') stationId: string) {
     return await this.stationService.removeStation(stationId);
+  }
+
+  @Put('update/:id')
+  @RequirePermission(Permission.CREATE_STATIONS)
+  async updateStation(@Param('id') stationId: string, @Body() body: any) {
+    return await this.stationService.updateStation(stationId, body);
   }
 }

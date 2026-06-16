@@ -34,4 +34,17 @@ export class StationService {
   async removeStation(stationId: string): Promise<any> {
     return await this.stationRepo.softDelete({ id: stationId });
   }
+
+  async updateStation(stationId: string, body: CreateStationDto) {
+    await this.stationRepo.update(
+      { id: stationId },
+      {
+        code: body.code,
+        name: body.name,
+        address: body.address,
+      },
+    );
+
+    return { status: 'success', message: 'Station updated successfully' };
+  }
 }

@@ -34,12 +34,16 @@ export class Officer {
   @JoinColumn()
   designation!: Designation;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deletedAt!: Date;
 
   @Column()
   createdBy!: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;
+
+  // tcrs
+
+  
 }

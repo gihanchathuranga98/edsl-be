@@ -102,4 +102,36 @@ export class UserController {
   async getAllOfficers() {
     return await this.userService.getAllOfficers();
   }
+
+  @UseGuards(AuthGuard, PermissionGuard)
+  @RequirePermission(Permission.CREATE_OFFICER)
+  @Post('assign-station')
+  async assignStationToOfficer(
+    @Body() payload: { stationId: string; officerId: string },
+    @Req() request: any,
+  ) {
+    return await this.userService.assignStationToOfficer(
+      payload,
+      request?.user?.id,
+    );
+  }
+
+  @UseGuards(AuthGuard, PermissionGuard)
+  @Post('/change-password')
+  async changePassword(
+    @Req() request: any,
+    @Body() payload: { oldPassword: string; newPassword: string },
+  ) {
+    return await this.userService.changePassword(request?.user?.id, payload);
+  }
+
+  @UseGuards(AuthGuard, PermissionGuard)
+  @RequirePermission(Permission.RECOVER_USER_PASSWORD)
+  @Post('/reset-password')
+  async resetPassword(
+    @Body() payload: { requestId: string; newPwd: string },
+    @Req() request: any,
+  ) {
+    return await this.userService.resetPassword(payload, request?.user?.id);
+  }
 }

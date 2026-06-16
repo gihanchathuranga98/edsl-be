@@ -35,6 +35,8 @@ export class UserService {
     private readonly designationRepo: Repository<Designation>,
     @InjectRepository(Officer)
     private readonly officerRepo: Repository<Officer>,
+    @InjectRepository(OfficerStationAssignment)
+    private readonly officerStationAssignmentRepo: Repository<OfficerStationAssignment>,
     @InjectRepository(PasswordRecoveryRequest)
     private readonly passwordRecoveryRequestRepo: Repository<PasswordRecoveryRequest>,
     private readonly jwtService: JwtService,
@@ -58,19 +60,35 @@ export class UserService {
       });
     }
 
+    const existingEmail: User | null = await this.userRepo.findOne({
+      where: { email: payload.email },
+      withDeleted: true,
+    });
+
+    if (existingEmail && existingEmail.deletedAt === null) {
+      throw new UnprocessableEntityException('User already exists');
+    }
+
+    if (existingEmail && existingEmail.deletedAt !== null) {
+      await this.userRepo.restore({ id: payload.email });
+    }
+
     const newUser: User = new User();
 
     const hashedPassword = await bcrypt.hash(
       payload.password.trim(),
-      this.configService.get<number>('SALT_ROUNDS') || 10,
+      Number(this.configService.get<number>('SALT_ROUNDS')),
     );
 
     const permissions = payload.permissions.map((perm: string) => {
       const permissionEntity = new PermissionEntity();
-      permissionEntity.name = perm as PermissionEnum;
+      permissionEntity.name =
+        PermissionEnum[perm as keyof typeof PermissionEnum];
+      permissionEntity.createdBy = createdBy;
       return permissionEntity;
     });
 
+    newUser.name = payload.name.trim();
     newUser.email = payload.email.trim();
     newUser.password = hashedPassword;
     newUser.createdBy = createdBy;
@@ -310,5 +328,124 @@ export class UserService {
         userEmail: user?.email,
       };
     });
+  }
+
+  async assignStationToOfficer(
+    payload: { stationId: string; officerId: string },
+    userId: string,
+  ) {
+    const officer = await this.officerRepo.findOne({
+      where: { id: payload.officerId },
+    });
+
+    if (!officer) {
+      throw new NotFoundException('Officer not found');
+    }
+
+    // Soft delete all existing active station assignments for this officer
+    await this.officerStationAssignmentRepo
+      .createQueryBuilder()
+      .softDelete()
+      .where('officerId = :officerId', { officerId: payload.officerId })
+      .andWhere('deletedAt IS NULL')
+      .execute();
+
+    // Insert new station assignment
+    await this.officerStationAssignmentRepo
+      .createQueryBuilder()
+      .insert()
+      .into(OfficerStationAssignment)
+      .values({
+        officer: { id: payload.officerId },
+        station: { id: payload.stationId },
+      })
+      .execute();
+
+    return { status: 'success', message: 'Station assigned successfully' };
+  }
+
+  async changePassword(
+    userId: string,
+    payload: { oldPassword: string; newPassword: string },
+  ) {
+    // Validate that oldPassword and newPassword are provided
+    if (!payload.oldPassword || !payload.newPassword) {
+      throw new UnprocessableEntityException({
+        code: 2007,
+        message: 'Old password and new password are required',
+      });
+    }
+
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+      select: ['id', 'password'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Ensure user.password exists before comparing
+    if (!user) {
+      throw new UnprocessableEntityException({
+        code: 2008,
+        message: 'User not found',
+      });
+    }
+
+    const isMatch = await bcrypt.compare(payload.oldPassword, user.password);
+
+    if (!isMatch) {
+      throw new UnprocessableEntityException({
+        code: 2006,
+        message: 'Old password is incorrect',
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(
+      payload.newPassword.trim(),
+      Number(this.configService.get<number>('SALT_ROUNDS')),
+    );
+
+    await this.userRepo.update({ id: userId }, { password: hashedPassword });
+
+    return { status: 'success', message: 'Password changed successfully' };
+  }
+
+  async resetPassword(
+    payload: { requestId: string; newPwd: string },
+    adminUserId: string,
+  ) {
+    console.log('newPwd', payload);
+
+    const recoveryReq = await this.passwordRecoveryRequestRepo.findOne({
+      where: { id: payload.requestId },
+    });
+
+    if (!recoveryReq) {
+      throw new NotFoundException('Recovery request not found');
+    }
+
+    const user = await this.userRepo.findOne({
+      where: { id: recoveryReq.userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const hashedPassword = await bcrypt.hash(
+      String(payload.newPwd).trim(),
+      Number(this.configService.get<number>('SALT_ROUNDS')),
+    );
+
+    await this.userRepo.update({ id: user.id }, { password: hashedPassword });
+
+    await this.passwordRecoveryRequestRepo.update(
+      { id: recoveryReq.id },
+      { status: PasswordRecoveryRequestEnum.RECOVERED },
+    );
+
+    return { status: 'success', message: 'Password reset successfully' };
   }
 }

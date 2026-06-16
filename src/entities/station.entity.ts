@@ -22,10 +22,10 @@ export class Station {
   @Column({ nullable: true })
   address!: string;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deletedAt!: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;
 
   @Column({ nullable: true })

@@ -17,13 +17,13 @@ export class Permission {
   @Column()
   name!: PermissionEnum;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deletedAt!: Date;
 
   @ManyToOne(() => User, (user) => user.permissions)
   user!: User;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;
 
   @Column({ nullable: true, type: 'uuid' })
