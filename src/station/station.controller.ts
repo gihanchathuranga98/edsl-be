@@ -23,11 +23,10 @@ export class StationController {
   @Post('create')
   @RequirePermission(Permission.CREATE_STATIONS)
   async createNewStation(@Body() body: any, @Req() request: any) {
-    return await this.stationService.createNewStation(body, request?.user?.id);
+    // return await this.stationService.createNewStation(body, request?.user?.id);
   }
 
   @Get('all')
-  @RequirePermission()
   async getAllStations() {
     return await this.stationService.getAllStations();
   }

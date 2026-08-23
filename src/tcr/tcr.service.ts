@@ -60,6 +60,12 @@ export class TcrService {
     newTcr.stationId = payload.stationId;
     newTcr.totalCaseAmount = payload.totalCaseAmount;
     newTcr.createdBy = userId;
+
+    /**
+     * all the bonus shares should divide based on the
+     * rank of each officer and the category each of the officers has been listed in the TCR
+     */
+
     newTcr.specialFund =
       (Number(specialFund?.fundShare) * payload.totalCaseAmount) / 100;
     newTcr.consolidatedFund =
@@ -80,17 +86,17 @@ export class TcrService {
       (Number(informantFund?.fundShare) * payload.totalCaseAmount) / 100;
 
     //   officers
-    newTcr.detectingOfficers = detectionOfficerIds?.map(
+    newTcr.detectingOfficers = detectionOfficerIds?.filter(Boolean).map(
       (id) => ({ id }) as Officer,
     );
-    newTcr.informant = informantIds?.map((id) => ({ id }) as Officer);
-    newTcr.prosecutingOfficers = prosecutingOffiersIds?.map(
+    newTcr.informant = informantIds?.filter(Boolean).map((id) => ({ id }) as Officer);
+    newTcr.prosecutingOfficers = prosecutingOffiersIds?.filter(Boolean).map(
       (id) => ({ id }) as Officer,
     );
-    newTcr.participationOfficers = detectionOthersIds?.map(
+    newTcr.participationOfficers = detectionOthersIds?.filter(Boolean).map(
       (id) => ({ id }) as Officer,
     );
-    newTcr.others = othersIds?.map((id) => ({ id }) as Officer);
+    newTcr.others = othersIds?.filter(Boolean).map((id) => ({ id }) as Officer);
 
     newTcr.status = TcrStatus.PENDING;
 

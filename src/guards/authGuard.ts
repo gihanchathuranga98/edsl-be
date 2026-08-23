@@ -4,8 +4,12 @@ import {
   ExecutionContext,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
+
+/**
+ * AuthGuard - Guard to check if the user is authenticated
+ * extract and decode the JWT token and gets the user object
+ */
 
 @Injectable()
 export class AuthGuard implements CanActivate {
