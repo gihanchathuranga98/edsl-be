@@ -18,6 +18,7 @@ import { UserLoginDto } from './dtos/userLogin.dto';
 import { CreateUserDto } from './dtos/createUser.dto';
 import express from 'express';
 import { CreateDesignationDto } from './dtos/createDesignation.dto';
+import { CreateOfficerDto } from './dtos/createOfficer.dto';
 
 @Controller('api/v1/user')
 export class UserController {
@@ -49,6 +50,14 @@ export class UserController {
     @Req() request: any,
   ) {
     return await this.userService.refreshTocken(response, request);
+  }
+
+  @Post('logout')
+  async logout(
+    @Res({ passthrough: true }) response: express.Response,
+    @Req() request: express.Request,
+  ) {
+    return await this.userService.logout(response, request);
   }
 
   @UseGuards(AuthGuard, PermissionGuard)
@@ -92,7 +101,10 @@ export class UserController {
   @UseGuards(AuthGuard, PermissionGuard)
   @RequirePermission(Permission.CREATE_OFFICER)
   @Post('officer')
-  async createOfficer(@Body() payload, @Req() request: any) {
+  async createOfficer(
+    @Body() payload: CreateOfficerDto,
+    @Req() request: any,
+  ) {
     return await this.userService.createOfficer(payload, request?.user?.id);
   }
 
@@ -101,6 +113,13 @@ export class UserController {
   @Get('officers')
   async getAllOfficers() {
     return await this.userService.getAllOfficers();
+  }
+
+  @UseGuards(AuthGuard, PermissionGuard)
+  @RequirePermission(Permission.READ_ALL_OFFICERS)
+  @Get('officer/:id/station-history')
+  async getOfficerStationHistory(@Param('id') officerId: string) {
+    return await this.userService.getOfficerStationHistory(officerId);
   }
 
   @UseGuards(AuthGuard, PermissionGuard)

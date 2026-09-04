@@ -213,6 +213,28 @@ export class UserService {
     };
   }
 
+  async logout(response: Response, request: Request) {
+    const refreshToken = request.cookies?.refreshToken as string | undefined;
+
+    if (refreshToken) {
+      await this.userRepo.update(
+        { refreshToken },
+        { refreshToken: null, refreshTokenCreatedAt: null },
+      );
+    }
+
+    const cookieOptions = {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax' as const,
+      path: '/',
+    };
+    response.clearCookie('accessToken', cookieOptions);
+    response.clearCookie('refreshToken', cookieOptions);
+
+    return { status: 'success', message: 'Logged out successfully' };
+  }
+
   async fetchAllSystemUsers() {
     return await this.userRepo.find({
       select: ['id', 'name', 'email'],
@@ -249,12 +271,20 @@ export class UserService {
   }
 
   async createOfficer(payload: CreateOfficerDto, userId: string) {
+    if (
+      !Number.isFinite(Number(payload.basicSalary)) ||
+      Number(payload.basicSalary) < 0
+    ) {
+      throw new UnprocessableEntityException('Basic salary must be zero or greater');
+    }
+
     const officerStationAssignment = new OfficerStationAssignment();
     officerStationAssignment.station = { id: payload.stationId } as Station;
 
     const newOfficer = this.officerRepo.create({
       name: payload.name,
       code: payload.code,
+      basicSalary: Number(payload.basicSalary),
       designation: { id: payload.designationId } as Designation,
       stations: [officerStationAssignment],
       createdBy: userId,
@@ -268,6 +298,31 @@ export class UserService {
       relations: ['designation', 'stations', 'stations.station'],
       order: { createdAt: 'DESC' },
     });
+  }
+
+  async getOfficerStationHistory(officerId: string) {
+    const officer = await this.officerRepo.findOne({ where: { id: officerId } });
+    if (!officer) {
+      throw new NotFoundException('Officer not found');
+    }
+
+    const assignments = await this.officerStationAssignmentRepo.find({
+      where: { officer: { id: officerId } },
+      relations: ['station'],
+      withDeleted: true,
+      order: { createdAt: 'DESC' },
+    });
+
+    return assignments.map((assignment) => ({
+      id: assignment.id,
+      assignedAt: assignment.createdAt,
+      station: {
+        id: assignment.station.id,
+        code: assignment.station.code,
+        name: assignment.station.name,
+      },
+      isCurrent: !assignment.deletedAt,
+    }));
   }
 
   async recoverPassword(email: string) {

@@ -15,6 +15,7 @@ import { AuthGuard } from 'src/guards/authGuard';
 import { PermissionGuard } from 'src/guards/permissionGuard';
 import { TcrService } from './tcr.service';
 import { TcrStatus } from 'src/enums/tcrStatus.enum';
+import type { CreateTcrDto } from './dtos/createTcr.dto';
 
 @Controller('api/v1/tcr')
 @UseGuards(AuthGuard, PermissionGuard)
@@ -23,7 +24,7 @@ export class TcrController {
 
   @Post('create')
   @RequirePermission(Permission.CREATE_TCR)
-  async createTcr(@Body() payload: any, @Req() request: any) {
+  async createTcr(@Body() payload: CreateTcrDto, @Req() request: any) {
     return await this.tcrService.createTcr(payload, request.user.id);
   }
 
@@ -34,8 +35,8 @@ export class TcrController {
   }
 
   @Get('get/:tcr')
-  async getTcrDetails(@Req() request: any, @Param('tcr') tcrId: string) {
-    return await this.tcrService.getTcrDetails(request.user.id, tcrId);
+  async getTcrDetails(@Param('tcr') tcrId: string) {
+    return await this.tcrService.getTcrDetails(tcrId);
   }
 
   @Post('review/:tcr/:type')
@@ -56,7 +57,7 @@ export class TcrController {
 
   @Put('/update/:tcr')
   @RequirePermission(Permission.CREATE_TCR)
-  async updateTcr(@Param('tcr') tcrId: string, @Body() payload: any) {
+  async updateTcr(@Param('tcr') tcrId: string, @Body() payload: CreateTcrDto) {
     return await this.tcrService.updateTcr(tcrId, payload);
   }
 }

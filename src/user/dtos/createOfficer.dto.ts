@@ -3,4 +3,5 @@ export class CreateOfficerDto {
   code!: number;
   stationId!: string;
   designationId!: string;
+  basicSalary!: number;
 }

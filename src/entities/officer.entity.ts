@@ -23,6 +23,9 @@ export class Officer {
   @Column({ unique: true })
   code!: number;
 
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
+  basicSalary!: number;
+
   @OneToMany(
     () => OfficerStationAssignment,
     (assignment) => assignment.officer,

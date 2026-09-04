@@ -37,11 +37,11 @@ export class User {
   @Column({ nullable: true, type: 'uuid' })
   createdBy!: string;
 
-  @Column({ nullable: true })
-  refreshToken!: string;
+  @Column({ type: 'varchar', nullable: true })
+  refreshToken!: string | null;
 
-  @Column({ nullable: true })
-  refreshTokenCreatedAt!: Date;
+  @Column({ type: 'timestamptz', nullable: true })
+  refreshTokenCreatedAt!: Date | null;
 
   @OneToMany(() => Permission, (permission) => permission.user, {
     cascade: true,

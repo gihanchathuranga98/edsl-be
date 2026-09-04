@@ -8,9 +8,9 @@ import {
   ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
 } from 'typeorm';
 import { Officer } from './officer.entity';
+import { TcrOfficerAllocation } from './tcrOfficerAllocation.entity';
 
 @Entity()
 export class Tcr {
@@ -38,11 +38,11 @@ export class Tcr {
   @Column()
   createdBy!: string;
 
-  @Column({ nullable: true })
-  approvedBy!: string;
+  @Column({ type: 'varchar', nullable: true })
+  approvedBy!: string | null;
 
-  @UpdateDateColumn({ type: 'timestamptz' })
-  approvedAt!: Date;
+  @Column({ type: 'timestamptz', nullable: true })
+  approvedAt!: Date | null;
 
   @Column({ type: 'decimal' })
   totalCaseAmount!: number;
@@ -91,4 +91,7 @@ export class Tcr {
   @ManyToMany(() => Officer)
   @JoinTable()
   others!: Officer[];
+
+  @OneToMany(() => TcrOfficerAllocation, (allocation) => allocation.tcr)
+  officerAllocations!: TcrOfficerAllocation[];
 }
