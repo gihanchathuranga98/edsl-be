@@ -6,7 +6,6 @@ import {
   JoinColumn,
   OneToMany,
   OneToOne,
-  PrimaryColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { OfficerStationAssignment } from './officerStationAssignment.entity';
@@ -47,6 +46,4 @@ export class Officer {
   createdAt!: Date;
 
   // tcrs
-
-  
 }
