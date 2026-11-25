@@ -25,7 +25,22 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
-## Project setup
+## Docker
+
+Run from the `edsl-be` directory:
+
+```bash
+docker build -t edsl-be .
+docker run --rm --name edsl-be --env-file .env -e PORT=3000 -p 3000:3000 edsl-be
+```
+
+The image excludes `.env` files; configuration is supplied at runtime. Set
+`DB_HOST` to a PostgreSQL host reachable from the container. For PostgreSQL on
+the host machine with Docker Desktop, use `host.docker.internal` instead of
+`localhost` (for example, add `-e DB_HOST=host.docker.internal` to `docker run`).
+The backend currently allows browser requests from `http://localhost:5173`.
+
+## Local installation
 
 ```bash
 $ npm install
